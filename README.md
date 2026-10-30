@@ -81,6 +81,10 @@ In the call panel, choose **System audio (WASAPI loopback)** to listen to the Wi
 
 Windows audio capture uses the Python package `soundcard` and does not require BlackHole or FFmpeg for the live system-audio route. If SoundCard cannot open the output device, check Windows Sound output selection, app permissions, the device driver, and [troubleshooting](docs/TROUBLESHOOTING.md). The source checks run on Windows in GitHub Actions; a full real-device live-call test is still needed before relying on it.
 
+### Windows installer artifact
+
+Every successful **Source checks** workflow creates an `OpenCluely-Windows` artifact containing unsigned setup and portable executables. Download it from the workflow run's **Artifacts** section. Windows may show a SmartScreen warning because the build is not code-signed. Install Python 3.11 and Ollama first; in OpenCluely onboarding, install Whisper and download `base.en`. The in-app installer stores Python packages and model weights in the app's private user-data folder, outside the installed program archive.
+
 ## How to use
 
 1. **Start the app** with `npm start` and open the call-copilot controls.

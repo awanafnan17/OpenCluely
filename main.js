@@ -1427,7 +1427,7 @@ class ApplicationController {
       try {
         const installer = this.getWhisperInstaller();
         const sender = event.sender;
-        const result = await installer.downloadModel(modelName || 'turbo', {
+        const result = await installer.downloadModel(modelName || 'base.en', {
           onProgress: (line) => {
             try { sender.send("install-progress", line); } catch (_) { /* ignore */ }
           },

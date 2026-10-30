@@ -1,6 +1,6 @@
 const { spawn } = require('child_process');
-const path = require('path');
 const EventEmitter = require('events');
+const { resolveRuntimePython, resolveNativeScript } = require('../core/runtime-paths');
 
 const FRAME_BYTES = 640; // 20 ms of mono 16 kHz signed 16-bit PCM.
 
@@ -22,8 +22,8 @@ class WindowsLoopbackAudioService extends EventEmitter {
       return Promise.reject(new Error('WASAPI loopback capture is already running.'));
     }
 
-    const python = path.join(__dirname, '../../.venv-whisper/Scripts/python.exe');
-    const worker = path.join(__dirname, '../native/windows_loopback_worker.py');
+    const python = resolveRuntimePython('win32');
+    const worker = resolveNativeScript('windows_loopback_worker.py');
     const env = { ...process.env };
     delete env.ELECTRON_RUN_AS_NODE;
 

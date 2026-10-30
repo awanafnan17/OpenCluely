@@ -1,19 +1,16 @@
 const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
 const EventEmitter = require('events');
 const logger = require('./speech.service').logger || console;
+const { resolveRuntimePython, resolveModelDir, resolveNativeScript } = require('../core/runtime-paths');
 
 class StreamingTranscriptionService extends EventEmitter {
   constructor() {
     super();
     this.workerProcess = null;
     this.isReady = false;
-    this.pythonPath = process.platform === 'win32'
-      ? path.join(__dirname, '../../.venv-whisper/Scripts/python.exe')
-      : path.join(__dirname, '../../.venv-whisper/bin/python');
-    this.workerScript = path.join(__dirname, '../native/whisper_streaming_worker.py');
-    this.modelDir = path.join(__dirname, '../../.whisper-models');
+    this.pythonPath = resolveRuntimePython();
+    this.workerScript = resolveNativeScript('whisper_streaming_worker.py');
+    this.modelDir = resolveModelDir();
     this.activeModel = 'base.en';
   }
 

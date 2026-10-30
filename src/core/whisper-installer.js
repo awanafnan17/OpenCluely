@@ -308,8 +308,10 @@ class WhisperInstaller {
     }
 
     // Step 3: pip install into the venv
-    log(`→ Installing openai-whisper into venv (this can take a few minutes)…`);
-    const pipResult = await this.runExec(vp.python, ['-m', 'pip', 'install', '--upgrade', 'openai-whisper'], {
+    const packages = ['openai-whisper'];
+    if (this.platform === 'win32') packages.push('soundcard==0.4.6');
+    log(`→ Installing ${packages.join(' and ')} into venv (this can take a few minutes)…`);
+    const pipResult = await this.runExec(vp.python, ['-m', 'pip', 'install', '--upgrade', ...packages], {
       timeout: INSTALL_TIMEOUT_MS,
       onProgress: log,
     });
@@ -318,7 +320,7 @@ class WhisperInstaller {
       log(`! ${msg}`);
       return { ok: false, command: null, message: msg, logs: pipResult.stdout + '\n' + pipResult.stderr };
     }
-    log('✓ openai-whisper installed');
+    log(`✓ ${packages.join(' and ')} installed`);
 
     // Step 4: verify the resulting CLI
     log(`→ Verifying whisper CLI at ${vp.whisper}…`);
@@ -394,8 +396,8 @@ class WhisperInstaller {
           steps: [
             'Python 3.10+ must be on PATH (download from python.org if missing).',
             "We'll create <code>.venv-whisper\\</code> in the app directory — no admin needed.",
-            'openai-whisper installs into the venv via pip (live progress shown below).',
-            'First transcription downloads the <code>turbo</code> model (~150 MB).',
+            'openai-whisper and Windows WASAPI loopback support install into the venv via pip.',
+            'Download the <code>base.en</code> live-call model (~142 MB) before your first call.',
           ],
         };
       case 'darwin':
@@ -405,7 +407,7 @@ class WhisperInstaller {
             'Uses your existing Python 3 (install via Homebrew if missing).',
             "We'll create <code>.venv-whisper/</code> in the app directory.",
             'openai-whisper installs into the venv — no <code>sudo</code> required.',
-            'First transcription downloads the <code>turbo</code> model (~150 MB).',
+            'Download the <code>base.en</code> live-call model (~142 MB) before your first call.',
           ],
         };
       default:
@@ -415,7 +417,7 @@ class WhisperInstaller {
             'Uses your system Python 3.',
             "We'll create <code>.venv-whisper/</code> in the app directory.",
             'This avoids the "externally-managed-environment" pip error on Ubuntu 23.04+, Debian 12+, Fedora 38+.',
-            'First transcription downloads the <code>turbo</code> model (~150 MB).',
+            'Download the <code>base.en</code> live-call model (~142 MB) before your first call.',
           ],
         };
     }
@@ -553,7 +555,7 @@ class WhisperInstaller {
     return false;
   }
 
-  async downloadModel(modelName = 'turbo', { onProgress } = {}) {
+  async downloadModel(modelName = 'base.en', { onProgress } = {}) {
     const log = (line) => {
       if (typeof onProgress === 'function' && line) {
         try { onProgress(line); } catch (_) { /* ignore */ }
