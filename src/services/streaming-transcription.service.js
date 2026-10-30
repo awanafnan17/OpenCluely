@@ -9,7 +9,9 @@ class StreamingTranscriptionService extends EventEmitter {
     super();
     this.workerProcess = null;
     this.isReady = false;
-    this.pythonPath = path.join(__dirname, '../../.venv-whisper/bin/python');
+    this.pythonPath = process.platform === 'win32'
+      ? path.join(__dirname, '../../.venv-whisper/Scripts/python.exe')
+      : path.join(__dirname, '../../.venv-whisper/bin/python');
     this.workerScript = path.join(__dirname, '../native/whisper_streaming_worker.py');
     this.modelDir = path.join(__dirname, '../../.whisper-models');
     this.activeModel = 'base.en';

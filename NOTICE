@@ -1,10 +1,10 @@
 OpenCluely
-Original project: TechyCSR/OpenCluely
-https://github.com/TechyCSR/OpenCluely
+Original application: OpenCluely by TechyCSR.
 
 This repository contains a modified source distribution maintained by Afnan Mehmood Awan.
 Local additions include the Markdown call-brief workflow, local Ollama integration,
-streaming Whisper worker, BlackHole audio path, and related reliability work.
+streaming Whisper worker, macOS BlackHole and Windows WASAPI audio paths, and related
+reliability work.
 The original Apache License 2.0 is retained in LICENSE. Existing third-party
 notices within source and bundled libraries are retained. Package metadata has
 been aligned with the supplied LICENSE file.

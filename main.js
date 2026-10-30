@@ -781,6 +781,7 @@ class ApplicationController {
     ipcMain.handle("end-call-and-purge", async () => {
       const sckAudioService = require("./src/services/sck-audio.service");
       const blackholeAudioService = require("./src/services/blackhole-audio.service");
+      const windowsLoopbackAudioService = require("./src/services/windows-loopback-audio.service");
       const streamingTranscriptionService = require("./src/services/streaming-transcription.service");
       const questionDetectorService = require("./src/services/question-detector.service");
 
@@ -789,9 +790,11 @@ class ApplicationController {
       }
       try {
         blackholeAudioService.stopCapture();
+        windowsLoopbackAudioService.stopCapture();
         sckAudioService.stopCapture();
         streamingTranscriptionService.stopWorker();
         blackholeAudioService.removeAllListeners();
+        windowsLoopbackAudioService.removeAllListeners();
         sckAudioService.removeAllListeners();
         streamingTranscriptionService.removeAllListeners();
         questionDetectorService.removeAllListeners();
@@ -822,6 +825,9 @@ class ApplicationController {
 
     // Live Call Copilot & ScreenCaptureKit IPC Handlers
     ipcMain.handle("get-audio-sources", async () => {
+      if (process.platform === "win32") {
+        return { success: true, platform: "win32", apps: [] };
+      }
       try {
         const sckAudioService = require("./src/services/sck-audio.service");
         return await sckAudioService.getShareableApps();
@@ -852,6 +858,8 @@ class ApplicationController {
       logger.info("[CALL] START Live Call Copilot Mode...", sourceOptions);
 
       const sckAudioService = require("./src/services/sck-audio.service");
+      const blackholeAudioService = require("./src/services/blackhole-audio.service");
+      const windowsLoopbackAudioService = require("./src/services/windows-loopback-audio.service");
       const streamingTranscriptionService = require("./src/services/streaming-transcription.service");
       const questionDetectorService = require("./src/services/question-detector.service");
       const localRetrievalService = require("./src/services/local-retrieval.service");
@@ -860,8 +868,12 @@ class ApplicationController {
         logger.error("[CALL] Startup failed, executing FULL ROLLBACK...", { errCode, errMsg });
         this.setCopilotState("STOPPING", `Rolling back session: ${errMsg}`);
         try { sckAudioService.stopCapture(); } catch (_) {}
+        try { blackholeAudioService.stopCapture(); } catch (_) {}
+        try { windowsLoopbackAudioService.stopCapture(); } catch (_) {}
         try { streamingTranscriptionService.stopWorker(); } catch (_) {}
         try { sckAudioService.removeAllListeners(); } catch (_) {}
+        try { blackholeAudioService.removeAllListeners(); } catch (_) {}
+        try { windowsLoopbackAudioService.removeAllListeners(); } catch (_) {}
         try { streamingTranscriptionService.removeAllListeners(); } catch (_) {}
         try { questionDetectorService.removeAllListeners(); } catch (_) {}
         try { questionDetectorService.reset(); } catch (_) {}
@@ -926,8 +938,6 @@ class ApplicationController {
         // 4. Connect audio pipeline
         this.setCopilotState("WAITING_FOR_AUDIO", "Connecting audio pipeline...");
 
-        const blackholeAudioService = require("./src/services/blackhole-audio.service");
-
         sckAudioService.removeAllListeners("audio-frame");
         sckAudioService.removeAllListeners("audio-stalled");
         sckAudioService.removeAllListeners("audio-recovered");
@@ -935,6 +945,10 @@ class ApplicationController {
         blackholeAudioService.removeAllListeners("audio-frame");
         blackholeAudioService.removeAllListeners("audio-stalled");
         blackholeAudioService.removeAllListeners("audio-recovered");
+
+        windowsLoopbackAudioService.removeAllListeners("audio-frame");
+        windowsLoopbackAudioService.removeAllListeners("audio-stalled");
+        windowsLoopbackAudioService.removeAllListeners("audio-recovered");
 
         const audioFrameHandler = ({ pcm, rms }) => {
           streamingTranscriptionService.feedAudioFrame(pcm);
@@ -958,6 +972,8 @@ class ApplicationController {
         blackholeAudioService.on("audio-frame", audioFrameHandler);
         blackholeAudioService.on("audio-stalled", audioStalledHandler);
         blackholeAudioService.on("audio-recovered", audioRecoveredHandler);
+
+        windowsLoopbackAudioService.on("audio-frame", audioFrameHandler);
 
         streamingTranscriptionService.removeAllListeners("partial-transcript");
         streamingTranscriptionService.on("partial-transcript", (text) => {
@@ -1020,8 +1036,7 @@ class ApplicationController {
         });
 
         // 5. Start selected audio capture.
-        // Built-in microphone is the meeting-default local path.
-        this.setCopilotState("WAITING_FOR_PCM", "Waiting for microphone PCM audio...");
+        this.setCopilotState("WAITING_FOR_PCM", "Waiting for audio PCM frames...");
 
         let captureInfo;
 
@@ -1032,7 +1047,7 @@ class ApplicationController {
           this.liveMicLastRms = 0;
           this.liveMicCaptureActive = true;
 
-          logger.info("[LIVE-MIC] Starting MacBook built-in microphone capture");
+          logger.info("[LIVE-MIC] Starting default microphone capture");
 
           // Existing renderer recording event starts getUserMedia in MainWindowUI.
           BrowserWindow.getAllWindows().forEach((win) => {
@@ -1052,7 +1067,7 @@ class ApplicationController {
           if (this.liveMicPcmFrames < 5) {
             return await rollback(
               "MIC_PCM_TIMEOUT",
-              "MacBook microphone opened but no live PCM audio reached Whisper within 7 seconds."
+              "Microphone opened but no live PCM audio reached Whisper within 7 seconds."
             );
           }
 
@@ -1060,7 +1075,7 @@ class ApplicationController {
             success: true,
             source: {
               type: "microphone",
-              name: "MacBook Air Microphone"
+              name: "Default microphone"
             }
           };
 
@@ -1069,8 +1084,12 @@ class ApplicationController {
             bytes: this.liveMicPcmBytes,
             rms: this.liveMicLastRms
           });
+        } else if (process.platform === "win32") {
+          captureInfo = await windowsLoopbackAudioService.startCapture();
+        } else if (sourceOptions.type === "blackhole") {
+          captureInfo = await blackholeAudioService.startCapture();
         } else {
-          // Keep ScreenCaptureKit available only as an optional fallback.
+          // ScreenCaptureKit remains an optional macOS capture path.
           try {
             captureInfo = await sckAudioService.startCapture(sourceOptions);
           } catch (audioErr) {
@@ -1089,7 +1108,7 @@ class ApplicationController {
           "Listening to: " +
             (captureInfo.source
               ? (captureInfo.source.name || captureInfo.source)
-              : "MacBook Air Microphone")
+              : "Default microphone")
         );
 
         return {
@@ -1146,7 +1165,17 @@ class ApplicationController {
     ipcMain.handle("pause-live-call", () => {
       try {
         const sckAudioService = require("./src/services/sck-audio.service");
+        const blackholeAudioService = require("./src/services/blackhole-audio.service");
+        const windowsLoopbackAudioService = require("./src/services/windows-loopback-audio.service");
         sckAudioService.stopCapture();
+        blackholeAudioService.stopCapture();
+        windowsLoopbackAudioService.stopCapture();
+        if (this.liveMicCaptureActive) {
+          BrowserWindow.getAllWindows().forEach((win) => {
+            if (!win.isDestroyed()) win.webContents.send("recording-stopped");
+          });
+          this.liveMicCaptureActive = false;
+        }
         this.liveCallActive = false;
         this.liveCallStarting = false;
         windowManager.broadcastToAllWindows("copilot-status", { active: false, statusText: "Copilot Paused" });

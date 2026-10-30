@@ -314,19 +314,19 @@ class ChatWindowUI {
                     const selectedText =
                         audioSourceSelect && audioSourceSelect.selectedIndex >= 0
                             ? audioSourceSelect.options[audioSourceSelect.selectedIndex].text
-                            : 'MacBook Air Microphone';
+                            : 'Default microphone';
 
                     const isMicrophone = selectedValue === 'microphone';
 
                     this.addMessage(
                         isMicrophone
-                            ? '🟢 Preloading models & starting MacBook microphone live audio capture...'
-                            : '🟢 Preloading models & starting ScreenCaptureKit live audio capture...',
+                            ? '🟢 Preloading models & starting microphone capture...'
+                            : '🟢 Preloading models & starting system audio capture...',
                         'system'
                     );
 
                     const res = await window.electronAPI.startLiveCall({
-                        type: isMicrophone ? 'microphone' : 'sck',
+                        type: isMicrophone ? 'microphone' : selectedValue === 'blackhole' ? 'blackhole' : 'system',
                         pid: /^\d+$/.test(selectedValue)
                             ? Number(selectedValue)
                             : null,
@@ -497,15 +497,25 @@ class ChatWindowUI {
 
             const micOpt = document.createElement('option');
             micOpt.value = 'microphone';
-            micOpt.textContent = 'MacBook Air Microphone (Recommended)';
+            micOpt.textContent = 'Default microphone';
             select.appendChild(micOpt);
 
-            const sckOpt = document.createElement('option');
-            sckOpt.value = 'system';
-            sckOpt.textContent = 'System Audio (ScreenCaptureKit Experimental)';
-            select.appendChild(sckOpt);
+            const systemOpt = document.createElement('option');
+            systemOpt.value = res && res.platform === 'win32' ? 'windows-loopback' : 'blackhole';
+            systemOpt.textContent = res && res.platform === 'win32'
+                ? 'System audio (WASAPI loopback)'
+                : 'System audio (BlackHole 2ch)';
+            select.appendChild(systemOpt);
+            systemOpt.selected = true;
 
-            if (res && res.success && Array.isArray(res.apps)) {
+            if (res && res.platform !== 'win32') {
+                const sckOpt = document.createElement('option');
+                sckOpt.value = 'system';
+                sckOpt.textContent = 'System audio (ScreenCaptureKit experimental)';
+                select.appendChild(sckOpt);
+            }
+
+            if (res && res.success && res.platform !== 'win32' && Array.isArray(res.apps)) {
                 const seenPids = new Set();
                 res.apps.forEach(app => {
                     if (app && app.pid && !seenPids.has(app.pid)) {

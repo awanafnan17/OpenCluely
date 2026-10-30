@@ -6,11 +6,11 @@
 
 ## Audio and transcription
 
-`blackhole-audio.service.js` enumerates AVFoundation devices through FFmpeg, chooses BlackHole and emits normalized PCM frames. It tracks frame count, bytes, RMS energy and stalled/recovered events. `streaming-transcription.service.js` starts one Python worker, removes Electron/Node-specific environment variables from that child's environment, waits for readiness, forwards frames, and relays partial/final transcripts. Its default startup deadline is 35 seconds.
+On macOS, `blackhole-audio.service.js` enumerates AVFoundation devices through FFmpeg, chooses BlackHole and emits normalized PCM frames. It tracks frame count, bytes, RMS energy and stalled/recovered events. On Windows, `windows-loopback-audio.service.js` starts a Python SoundCard/WASAPI helper which records the default speaker as 16 kHz mono PCM. `streaming-transcription.service.js` starts one Python Whisper worker, removes Electron/Node-specific environment variables from that child's environment, waits for readiness, forwards frames, and relays partial/final transcripts. Its default startup deadline is 35 seconds.
 
-`whisper_streaming_worker.py` loads OpenAI Whisper `base.en` once, selects a supported compute device, and processes rolling speech windows. `WHISPER_DEVICE` can request CPU or MPS. The project integrates Whisper; it does not contain custom-trained speech weights. Audio quality and speech-window settings influence latency and accuracy.
+`whisper_streaming_worker.py` loads OpenAI Whisper `base.en` once, selects CUDA, MPS or CPU when available, and processes rolling speech windows. `WHISPER_DEVICE` can override device selection. The project integrates Whisper; it does not contain custom-trained speech weights. Audio quality and speech-window settings influence latency and accuracy.
 
-A Swift ScreenCaptureKit helper and `sck-audio.service.js` remain in the source as an alternate capture path. The current main live-call flow uses BlackHole. No precompiled helper is distributed.
+A Swift ScreenCaptureKit helper and `sck-audio.service.js` remain in the source as an alternate macOS capture path. No precompiled helper is distributed. Windows system audio uses WASAPI; the renderer microphone route is separately available on both platforms. The app does not mix microphone and system audio automatically.
 
 ## Brief retrieval and grounding
 

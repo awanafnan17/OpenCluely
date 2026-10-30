@@ -133,7 +133,8 @@ def main():
 
     device = (
         os.environ.get("WHISPER_DEVICE")
-        or ("mps" if torch.backends.mps.is_available() else "cpu")
+        or ("cuda" if torch.cuda.is_available() else
+            "mps" if torch.backends.mps.is_available() else "cpu")
     )
 
     emit_stderr({

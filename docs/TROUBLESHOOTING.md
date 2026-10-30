@@ -9,6 +9,8 @@
 | MPS errors | Retry with `WHISPER_DEVICE=cpu npm start`; CPU may be slower |
 | No transcript | Confirm BlackHole is installed, the Multi-Output Device is selected, audio is actually playing and FFmpeg is on PATH |
 | No audible meeting sound | Include headphones/speakers in the Multi-Output Device; BlackHole alone does not play sound |
+| Windows system audio silent | Select the playback device as Windows' default output, play sample audio, then refresh the source; try another driver/headset if WASAPI loopback is unsupported |
+| Windows capture helper exits | Confirm `.venv-whisper/Scripts/python.exe` can `import soundcard, numpy` and the default speaker is available |
 | Microphone/screenshot permission denied | Grant the relevant macOS Privacy & Security permission and fully restart the app |
 | Unrelated answer | Confirm the correct brief is loaded, test a typed question, and end/purge before switching contexts |
 | Optional cloud request fails | Check the selected provider, current model availability and your locally configured key |

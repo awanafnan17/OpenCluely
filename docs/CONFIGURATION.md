@@ -7,9 +7,9 @@ Copy `env.example` to `.env`. Never commit `.env` or real provider keys.
 | Ollama endpoint | Fixed local `127.0.0.1:11434` in `src/services/ollama.service.js` |
 | Local LLM preference | `qwen3:1.7b-q4_K_M`, then `qwen3:1.7b`, then installed fallback |
 | Live-call Whisper | `base.en`, selected in `main.js` and the streaming service |
-| Live worker Python | Repository-local `.venv-whisper/bin/python` |
+| Live worker Python | macOS `.venv-whisper/bin/python`; Windows `.venv-whisper/Scripts/python.exe` |
 | Live model directory | Repository-local `.whisper-models` |
-| `WHISPER_DEVICE` | Optional `cpu` or `mps` override for the streaming worker |
+| `WHISPER_DEVICE` | Optional `cpu`, `mps` or `cuda` override for the streaming worker |
 | `WHISPER_INITIAL_PROMPT` | Vocabulary hint; the selected brief may supply it automatically |
 | `SPEECH_PROVIDER` | Legacy speech route: `whisper` or `azure` |
 | `WHISPER_COMMAND` | Executable for the legacy microphone transcription route |
