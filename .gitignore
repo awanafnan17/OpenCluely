@@ -1,0 +1,32 @@
+# Credentials and private runtime data
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.db
+*.sqlite*
+*.sql
+*.log
+logs/
+.OpenCluely/
+# Dependencies and generated assets
+node_modules/
+.venv*/
+.whisper-models/
+__pycache__/
+*.pyc
+dist/
+playwright-report/
+test-results/
+bin/sck_audio_capturer
+*.dSYM/
+*.bak
+.DS_Store
+# Private call material
+*.brief.md
+recordings/
+transcripts/
+screenshots/
