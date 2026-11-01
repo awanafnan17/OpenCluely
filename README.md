@@ -1,6 +1,6 @@
 # OpenCluely
 
-### A local-first desktop copilot for prepared conversations
+### A local desktop copilot for prepared calls
 
 [![Electron](https://img.shields.io/badge/Electron-29-47848F?logo=electron&logoColor=white)](package.json)
 [![JavaScript](https://img.shields.io/badge/JavaScript-Node.js-F7DF1E?logo=javascript&logoColor=black)](package.json)
@@ -8,7 +8,7 @@
 [![Ollama](https://img.shields.io/badge/Local_LLM-Qwen3_1.7B-635BFF)](src/services/ollama.service.js)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue)](LICENSE)
 
-OpenCluely brings a Markdown call brief, local speech transcription, and streamed AI answers into an Electron desktop overlay. Load the facts you want to discuss, choose an answer style, and use the local call workflow to retrieve relevant context while you speak.
+OpenCluely is an Electron desktop overlay that reads a local Markdown brief, transcribes live audio, and streams answers from a local model. Load the facts you want to discuss, choose an answer style, and let the app retrieve the relevant context while you speak.
 
 OpenCluely is maintained and extended by **Afnan Mehmood Awan**. This version adds a local call-brief and live-audio workflow to the desktop assistant. License and original-author credits are preserved in [NOTICE](NOTICE).
 
@@ -95,7 +95,7 @@ Every successful **Source checks** workflow creates an `OpenCluely-Windows` arti
 6. **Start Live Call** after audio routing is ready. The app transcribes audio, detects questions and streams the answer into the UI.
 7. **End Call & Purge** when finished. This resets in-memory call state; it is not a secure deletion of local logs or source briefs.
 
-Example brief — fictional content:
+Example fictional brief:
 
 ```markdown
 # Atlas Dashboard discussion
